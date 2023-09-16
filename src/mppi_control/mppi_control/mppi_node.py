@@ -1,11 +1,13 @@
 import rclpy
 from rclpy.node import Node
-from mppi_control.msg import Control
-#from state_estimation.msg import State
+from our_msgs.msg import Control, CarState
 
-from pytorch_mppi import MPPI
 import torch
+from pytorch_mppi import MPPI
 
+
+# TODO: Define dynamics:(state, control -> next_state)
+#          and cost:(state, control -> cost)
 
 class MPPI_Node(Node):
 
@@ -25,7 +27,7 @@ class MPPI_Node(Node):
             queue_size)
 
         self.state_subscription = self.create_subscription(
-            State,
+            CarState,
             'state_estimate',
             self.run_controller_on_state_estimation_update,
             queue_size)
@@ -37,22 +39,20 @@ class MPPI_Node(Node):
         """
         """
         msg = Control()
-        msg.data = 'Hello World'   # control...
+        msg.velocity       = control[0]
+        msg.steering_angle = control[1]
         self.control_action_publisher.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
-    def unpack_state_from_msg(self, data):
-        pass
-        #state = f(data)...
+    def unpack_state_from_msg(self, msg):
+        state = [msg.pos_x, msg.pos_y, msg.yaw_angle, msg.velocity, msg.yaw_rate]
+        return state
 
 
     def run_controller_on_state_estimation_update(self, msg):
         """
         """
-        self.get_logger().info('Received state estimate: "%s"' % msg.data)
-
-        state = self.unpack_state_from_msg(msg.data)
+        state = self.unpack_state_from_msg(msg)
 
         # Call controller
         control_action = self.controller.command(state)
