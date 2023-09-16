@@ -1,0 +1,3 @@
+float32[] x
+float32[] y
+geometry_msgs/Pose pose
