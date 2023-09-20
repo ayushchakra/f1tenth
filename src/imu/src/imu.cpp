@@ -27,7 +27,7 @@ class IMUNode : public rclcpp::Node
         : Node("imu_node"), count_(0)
         {
             // Create publisher to continuously publish IMU data
-            imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("visual_slam/imu",10);
+            imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("camera/imu",10);
             // Create timer to manage continuous process and sending of IMU data
             timer_ = this->create_wall_timer(10ms, std::bind(&IMUNode::run_loop, this));
         }
@@ -37,13 +37,14 @@ class IMUNode : public rclcpp::Node
         {
             // Create message object that stores the current IMU data
             auto message = sensor_msgs::msg::Imu();
-
+            message.header.stamp = this->get_clock()->now();
+            message.header.frame_id = "camera_link";
             // Process current orientation (as quaternion)
             message.orientation.x = com.GetQuaternionX();
             message.orientation.y = com.GetQuaternionY();
             message.orientation.z = com.GetQuaternionZ();
             message.orientation.w = com.GetQuaternionW();
-
+bb        
             // Determine angular velocity based on angular change between successive time
             // steps
             int64_t curr_imu_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
