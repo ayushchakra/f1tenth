@@ -8,7 +8,7 @@ import termios
 from .controller import LogitechController
 import numpy as np
 
-CONTROLLER_MODE = "KEYBOARD"    # JOYSTICK or KEYBOARD
+CONTROLLER_MODE = "JOYSTICK"    # JOYSTICK or KEYBOARD
 
 class SendControl(Node):
     key_to_vel = {

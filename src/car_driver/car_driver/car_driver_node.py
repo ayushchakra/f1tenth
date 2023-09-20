@@ -21,10 +21,11 @@ class CarDriverNode(Node):
         )
         i2c = busio.I2C(SCL, SDA)
         self.pca = PCA9685(i2c)
-        # self.pca.frequency = 100 # TODO find out what this does
-        self.steer_servo = servo.Servo(self.pca.channels[0], 79, 1080, 1870)
+        print(self.pca.frequency)
+        self.pca.frequency = 50 # TODO find out what this does
+        self.steer_servo = servo.Servo(self.pca.channels[0], actuation_range=79, min_pulse=1080, max_pulse=1870)
         # self.esc_pwm = self.pca.channels[1] # TODO Convert ESC to real PWMOut
-        self.esc = servo.ContinuousServo(self.pca.channels[0], 1000, 2000)
+        self.esc = servo.ContinuousServo(self.pca.channels[1], min_pulse=1000, max_pulse=2000)
 
         self.STEER_ANGLE_OFFSET = 47
         self.TIRE_DIAMETER: int = 0.11  # m
@@ -33,16 +34,21 @@ class CarDriverNode(Node):
         self.MAX_VEL: float = ((self.MAX_RAW_RPM / self.GEAR_RATIO) / 60) * (
             (self.TIRE_DIAMETER * np.pi)
         )
+        print(self.MAX_VEL)
+        # self.calibrate_esc()
+        # self.arm_esc()
 
     def set_control(self, msg: Control):
         self.set_drive_velocity(msg.velocity)
         self.set_steering_angle(msg.steering_angle)
 
     def set_steering_angle(self, angle: float):
-        self.steer_servo.angle = math.degrees(angle) + self.STEER_ANGLE_OFFSET
+        self.steer_servo.angle = np.clip(math.degrees(angle) + self.STEER_ANGLE_OFFSET,0,self.steer_servo.actuation_range)
+        self.get_logger().info(f"Steer Angle {self.steer_servo.angle}")
 
     def set_drive_velocity(self, vel: float):
-        self.esc.throttle = vel / self.MAX_VEL
+        self.esc.throttle = -vel / self.MAX_VEL
+        # self.get_logger().info(f"ESC Throttle {self.esc.throttle}")
 
     def arm_esc(self):
         """
@@ -60,7 +66,7 @@ class CarDriverNode(Node):
         time.sleep(1)
         self.esc.throttle = -1
         time.sleep(4)
-
+        self.get_logger().info("Arming Complete")
         self.esc.throttle = 0
 
     def calibrate_esc(self):
@@ -74,6 +80,7 @@ class CarDriverNode(Node):
         time.sleep(2)
         self.esc.throttle = -1
         time.sleep(4)
+        self.get_logger().info("Calibration Complete")
 
     def steer_servo_off(self):
         self.steer_servo.angle = None

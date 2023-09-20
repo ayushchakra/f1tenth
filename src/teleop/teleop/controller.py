@@ -14,7 +14,7 @@ class LogitechController(object):
         
         pygame.init()
         pygame.joystick.init()
-        self.controller = pygame.joystick.Joystick(0)
+        self.controller = pygame.joystick.Joystick(2)
         self.controller.init()
         self.axis_data = {
             0: 0,
