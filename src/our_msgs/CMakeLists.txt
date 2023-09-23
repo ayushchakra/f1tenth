@@ -20,6 +20,7 @@ set(msg_files
   "msg/Control.msg"
   "msg/CarState.msg"
   "msg/Raceline.msg"
+  "msg/EmergencyStop.msg"
 )
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}

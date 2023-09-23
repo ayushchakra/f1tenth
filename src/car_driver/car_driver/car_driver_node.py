@@ -9,7 +9,7 @@ import busio
 from adafruit_pca9685 import PCA9685
 from adafruit_motor import servo
 
-from our_msgs.msg import Control
+from our_msgs.msg import Control, EmergencyStop
 
 
 class CarDriverNode(Node):
@@ -19,6 +19,10 @@ class CarDriverNode(Node):
         self.control_sub = self.create_subscription(
             Control, "control_signal", self.set_control, 10
         )
+        self.estop_sub = self.create_subscription(
+            EmergencyStop, "emergency_stop_signal", self.process_estop, 10
+        )
+        self.should_stop = False
         i2c = busio.I2C(SCL, SDA)
         self.pca = PCA9685(i2c)
         print(self.pca.frequency)
@@ -39,8 +43,13 @@ class CarDriverNode(Node):
         # self.arm_esc()
 
     def set_control(self, msg: Control):
+        if self.should_stop:
+            self.set_drive_velocity(0)
         self.set_drive_velocity(msg.velocity)
         self.set_steering_angle(msg.steering_angle)
+
+    def process_estop(self, msg: EmergencyStop):
+        self.should_stop = msg.should_stop
 
     def set_steering_angle(self, angle: float):
         self.steer_servo.angle = np.clip(math.degrees(angle) + self.STEER_ANGLE_OFFSET,0,self.steer_servo.actuation_range)

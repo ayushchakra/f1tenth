@@ -8,7 +8,7 @@ import termios
 from .controller import LogitechController
 import numpy as np
 
-CONTROLLER_MODE = "JOYSTICK"    # JOYSTICK or KEYBOARD
+CONTROLLER_MODE = "KEYBOARD"    # JOYSTICK or KEYBOARD
 
 class SendControl(Node):
     key_to_vel = {
@@ -63,7 +63,7 @@ class SendControl(Node):
             self.controller.listen()
 
             controller_x = self.controller.axis_data[3]
-            drive_velocity = float((self.controller.axis_data[5] - self.controller.axis_data[2]))*1.4
+            drive_velocity = float((-self.controller.axis_data[4]))*1.4
             drive_angle = -np.deg2rad(controller_x*35)
             self.drive_command_pub.publish(Control(steering_angle=drive_angle, velocity=drive_velocity))
 
